@@ -2,7 +2,7 @@
 DROP MATERIALIZED VIEW IF EXISTS ALINE_ICD;
 CREATE MATERIALIZED VIEW ALINE_ICD AS
 select
-  icd.hadm_id
+  co.hadm_id
   , max(case when icd9_code in
   (  '03642','07422','09320','09321','09322','09323','09324','09884'
     ,'11281','11504','11514','11594'
@@ -60,6 +60,8 @@ select
       or icd9_code between '482' and '48299'
       or icd9_code between '506' and '5078'
         then 1 else 0 end) as pneumonia
-from diagnoses_icd icd
-group by icd.hadm_id
-order by icd.hadm_id;
+from aline_cohort co
+left join diagnoses_icd icd
+  on co.hadm_id = icd.hadm_id
+group by co.hadm_id
+order by co.hadm_id;
