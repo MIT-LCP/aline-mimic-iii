@@ -339,10 +339,10 @@ select
   , case when v.vaso_start_day<=0.125 then 1 else 0 end as vaso_1st_3hr_flg
   , case when v.vaso_start_day<=0.25 then 1 else 0 end as vaso_1st_6hr_flg
   , case when v.vaso_start_day<=0.5 then 1 else 0 end as vaso_1st_12hr_flg
-  , case when ALINE_FLG=1 and INITIAL_ALINE_FLG =0 and vaso_start_day<=starttime_aline then 1
-         when ALINE_FLG=1 and INITIAL_ALINE_FLG =0 and vaso_start_day>starttime_aline then 0
-         when ALINE_FLG=0 and INITIAL_ALINE_FLG =0 and v.vaso_start_day<=(2/24) then 1
-         when ALINE_FLG=0 and INITIAL_ALINE_FLG =0 and v.vaso_start_day>(2/24) then 0
+  , case when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and vaso_start_day<=starttime_aline then 1
+         when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and vaso_start_day>starttime_aline then 0
+         when ALINE_FLG = 0 and INITIAL_ALINE_FLG = 0 and v.vaso_start_day<=(2/24) then 1
+         when ALINE_FLG = 0 and INITIAL_ALINE_FLG = 0 and v.vaso_start_day>(2/24) then 0
          else NULL
               end as vaso_b4_aline
 from vaso_flg v
