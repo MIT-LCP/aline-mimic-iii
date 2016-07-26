@@ -56,6 +56,20 @@ with a as
   from ve
   where rn = 1
 )
+-- patient given dobutamine
+, db as
+(
+  select ie.icustay_id
+    , min(coalesce(ie_cv.charttime, ie_mv.starttime)) as dobu_starttime
+  from icustays ie
+  left join inputevents_cv ie_cv
+    on ie.icustay_id = ie_cv.icustay_id
+    and ie_cv.itemid in (30306, 30042)
+  left join inputevents_mv ie_mv
+    on ie.icustay_id = ie_mv.icustay_id
+    and ie_mv.itemid = 221653
+  group by ie.icustay_id
+)
 -- cohort view - used to define other concepts
 , co as
 (
@@ -94,6 +108,10 @@ with a as
     , extract('dow' from intime) as intime_dayofweek
     , extract('hour' from intime) as intime_hour
 
+    -- exclusions
+    , case when db.dobu_starttime <= ie.intime + interval '12' hour
+        then 1
+      else 0 end as dobu_flg
 
     -- outcome
     , case when adm.deathtime is not null then 1 else 0 end as death_in_hospital
@@ -111,9 +129,12 @@ with a as
     on ie.icustay_id = a.icustay_id
   left join ve_grp
     on ie.icustay_id = ve_grp.icustay_id
+  left join db
+    on ie.icustay_id = db.icustay_id
   where ie.intime > (pat.dob + interval '16' year) -- only adults
 )
 select
   co.*
 from co
-where stay_num = 1;
+where stay_num = 1
+and dobu_flg = 0;
