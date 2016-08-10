@@ -103,7 +103,7 @@ with a as
 
     -- time of a-line
     , case when a.starttime_aline is not null then 1 else 0 end as aline_flg
-    , extract(epoch from (a.starttime_aline - ie.intime))/365.242/24.0/60.0/60.0 as starttime_aline
+    , extract(epoch from (a.starttime_aline - ie.intime))/24.0/60.0/60.0 as starttime_aline
     , case
         when a.starttime_aline is not null
          and a.starttime_aline <= ie.intime + interval '1' hour
@@ -116,8 +116,8 @@ with a as
     , ve_grp.endtime_last as vent_endtime
 
     -- cohort flags // demographics
-    , extract(epoch from (ie.outtime - ie.intime))/365.242/24.0/60.0/60.0 as icu_los
-    , extract(epoch from (adm.dischtime - adm.admittime))/365.242/24.0/60.0/60.0 as hospital_los
+    , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 as icu_los
+    , extract(epoch from (adm.dischtime - adm.admittime))/24.0/60.0/60.0 as hospital_los
     , extract('dow' from intime) as intime_dayofweek
     , extract('hour' from intime) as intime_hour
 
@@ -129,7 +129,7 @@ with a as
     , case when adm.deathtime is not null then 1 else 0 end as death_in_hospital
     , case when adm.deathtime <= ie.outtime then 1 else 0 end as death_in_icu
     , case when pat.dod <= (adm.admittime + interval '28' day) then 1 else 0 end as death_in_28days
-    , extract(epoch from (pat.dod - adm.admittime))/365.242/24.0/60.0/60.0 as death_offset
+    , extract(epoch from (pat.dod - adm.admittime))/24.0/60.0/60.0 as death_offset
     -- TODO: censored definition
 
   from icustays ie
@@ -159,7 +159,7 @@ and first_service not in
   'CSURG','VSURG','TSURG' -- cardiac/vascular/thoracic surgery
   ,'NB'
   ,'NBB'
-)
+);
 --  TODO: can't define medical or surgical ICU admission using ICU service type
 
 
