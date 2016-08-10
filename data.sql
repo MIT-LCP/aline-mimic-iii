@@ -133,5 +133,3 @@ and vaso.icustay_id is null -- never given vasopressors in the ICU
 order by co.icustay_id;
 
 -- The remaining exclusion criteria are applied in cohort.sql
---  **Angus sepsis
---  **On vasopressors (?is this different than on dobutamine)
