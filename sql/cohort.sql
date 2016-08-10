@@ -7,7 +7,6 @@
 --  mechanical ventilation within the first 12 hours
 --  medical or surgical ICU admission
 
-
 -- Exclusion criteria:
 --  **Angus sepsis
 --  **On vasopressors (?is this different than on dobutamine)
@@ -20,12 +19,17 @@
 -- for data extraction. For example, since all data is extracted before
 -- ventilation, we need to extract start times of ventilation
 
--- Definition of arterial line insertion:
---  First measurement of invasive blood pressure
+
+-- This query requires the following tables:
+--  ventdurations - extracted by mimic-code/etc/ventilation-durations.sql
+
 
 DROP MATERIALIZED VIEW IF EXISTS ALINE_COHORT CASCADE;
 CREATE MATERIALIZED VIEW ALINE_COHORT as
+
 -- get start time of arterial line
+-- Definition of arterial line insertion:
+--  First measurement of invasive blood pressure
 with a as
 (
   select icustay_id
@@ -87,6 +91,8 @@ with a as
 (
   select
     ie.subject_id, ie.hadm_id, ie.icustay_id
+    , ie.intime, ie.outtime
+
     , ROW_NUMBER() over (partition by ie.subject_id order by adm.admittime, ie.intime) as stay_num
     , extract(epoch from (ie.intime - pat.dob))/365.242/24.0/60.0/60.0 as age
     , pat.gender
