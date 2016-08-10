@@ -58,24 +58,12 @@ with a as
 -- last time ventilation was stopped
 , ve as
 (
-  select adm.subject_id, adm.hadm_id, ie.icustay_id
+  select icustay_id
+    , sum(extract(epoch from endtime-starttime))/24.0/60.0/60.0 as vent_day
     , min(starttime) as starttime_first
     , max(endtime) as endtime_last
-    , ROW_NUMBER() over (partition by adm.hadm_id order by ie.intime) as rn
   from ventdurations vd
-  inner join icustays ie
-    on vd.icustay_id = ie.icustay_id
-  inner join admissions adm
-    on ie.hadm_id = adm.hadm_id
-  group by adm.subject_id, adm.hadm_id, ie.icustay_id, ie.intime
-)
-, ve_grp as
-(
-  select subject_id, hadm_id, icustay_id
-    , starttime_first
-    , endtime_last
-  from ve
-  where rn = 1
+  group by icustay_id
 )
 , serv as
 (
@@ -91,11 +79,20 @@ with a as
 (
   select
     ie.subject_id, ie.hadm_id, ie.icustay_id
-    , ie.intime, ie.outtime
+    , ie.intime as icustay_intime
+    , to_char(ie.intime, 'day') as day_icu_intime
+    , extract(dow from ie.intime) as day_icu_intime_num
+    , extract(hour from ie.intime) as hour_icu_intime
+    ,
+    , ie.outtime as icustay_outtime
 
     , ROW_NUMBER() over (partition by ie.subject_id order by adm.admittime, ie.intime) as stay_num
     , extract(epoch from (ie.intime - pat.dob))/365.242/24.0/60.0/60.0 as age
     , pat.gender
+    , case when pat.gender = 'M' then 1 else 0 end as gender_num
+
+    -- TODO: weight_first, height_first, bmi
+    --  bmi
 
     -- service
 
@@ -103,7 +100,7 @@ with a as
 
     -- time of a-line
     , case when a.starttime_aline is not null then 1 else 0 end as aline_flg
-    , extract(epoch from (a.starttime_aline - ie.intime))/24.0/60.0/60.0 as starttime_aline
+    , extract(epoch from (a.starttime_aline - ie.intime))/24.0/60.0/60.0 as aline_time_day
     , case
         when a.starttime_aline is not null
          and a.starttime_aline <= ie.intime + interval '1' hour
@@ -112,25 +109,53 @@ with a as
       end as initial_aline_flg
 
     -- ventilation
-    , ve_grp.starttime_first as vent_starttime
-    , ve_grp.endtime_last as vent_endtime
+    , case when ve.icustay_id is not null then 1 else 0 end as vent_flg
+    , case when ve.starttime_first < ie.intime + interval '12' hour then 1 else 0 end as vent_1st_12hr
+    , case when ve.starttime_first < ie.intime + interval '24' hour then 1 else 0 end as vent_1st_24hr
+
+    -- binary flag: were they ventilated before a-line insertion?
+    , case
+        when a.starttime_aline is not null and a.starttime_aline > ie.intime + interval '1' hour and ve.starttime_first<=a.starttime_aline then 1
+        when a.starttime_aline is not null and a.starttime_aline > ie.intime + interval '1' hour and ve.starttime_first>a.starttime_aline then 0
+        when a.starttime_aline is null and v.vent_start_day<=(2/24) then 1
+        when a.starttime_aline is null and v.vent_start_day>(2/24) then 0
+        else NULL
+      end as vent_b4_aline
+
+    -- number of days *not* on a ventilator
+    , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 - vent_day as vent_free_day
+
+    , ve.starttime_first as vent_starttime
+    , ve.endtime_last as vent_endtime
+    , ve.vent_day
 
     -- cohort flags // demographics
-    , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 as icu_los
-    , extract(epoch from (adm.dischtime - adm.admittime))/24.0/60.0/60.0 as hospital_los
+    , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 as icu_los_day
+    , extract(epoch from (adm.dischtime - adm.admittime))/24.0/60.0/60.0 as hospital_los_day
     , extract('dow' from intime) as intime_dayofweek
     , extract('hour' from intime) as intime_hour
 
     -- will be used to exclude patients in CSRU
     -- also only include those in CMED or SURG
-    , s.curr_service as first_service
+    , s.curr_service as service_unit
+    , case when s.curr_service like '%SURG' or s.curr_service like '%ORTHO%' then 1
+          when s.curr_service = 'CMED' then 2
+          when s.curr_service in ('CSURG','VSURG','TSURG') then 3
+          else 0
+        end
+      as service_num
 
     -- outcome
-    , case when adm.deathtime is not null then 1 else 0 end as death_in_hospital
-    , case when adm.deathtime <= ie.outtime then 1 else 0 end as death_in_icu
-    , case when pat.dod <= (adm.admittime + interval '28' day) then 1 else 0 end as death_in_28days
-    , extract(epoch from (pat.dod - adm.admittime))/24.0/60.0/60.0 as death_offset
-    -- TODO: censored definition
+    , case when adm.deathtime is not null then 1 else 0 end as hosp_exp_flg
+    , case when adm.deathtime <= ie.outtime then 1 else 0 end as icu_exp_flg
+    , case when pat.dod <= (ie.intime + interval '28' day) then 1 else 0 end as day_28_flg
+    , extract(epoch from (pat.dod - adm.admittime))/24.0/60.0/60.0 as mort_day
+
+    , case when pat.dod is null
+        then 150 -- patient deaths are censored 150 days after admission
+        else extract(epoch from (pat.dod - adm.admittime))/24.0/60.0/60.0
+      end as mort_day_censored
+    , case when pat.dod is null then 1 else 0 end as censor_flg
 
   from icustays ie
   inner join admissions adm
@@ -150,11 +175,11 @@ select
   co.*
 from co
 where stay_num = 1 -- first ICU stay
-and icu_los > 1 -- one day in the ICU
+and icu_los_day > 1 -- one day in the ICU
 and initial_aline_flg = 0 -- aline placed later than admission
 and vent_starttime is not null -- were ventilated
 and vent_starttime < intime + interval '12' hour -- ventilated within first 12 hours
-and first_service not in
+and service_unit not in
 (
   'CSURG','VSURG','TSURG' -- cardiac/vascular/thoracic surgery
   ,'NB'
