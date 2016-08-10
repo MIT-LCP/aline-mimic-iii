@@ -1,9 +1,44 @@
 
 --FINAL QUERY (ish)
 select
-  co.*
-  , so.sofa
-  , s1.saps
+  co.subject_id, co.hadm_id, co.icustay_id
+  , co.icustay_intime
+  , co.initial_aline_flg -- always 0, we remove patients admitted w/ aline
+  , co.aline_flg
+  , co.aline_time_day
+  , co.icu_los_day
+  , co.hospital_los_day
+  , co.age
+  , co.gender_num
+
+  --TODO:
+  --, weight_first
+  --, bmi
+  --(optional extra) height_first
+
+  , s1.saps as sapsi_first
+  , so.sofa as sofa_first
+  , co.service_unit
+  , co.service_num
+  , co.icustay_outtime
+
+  , co.day_icu_intime -- day of week, text
+  , co.day_icu_intime_num -- day of week, numeric (0=Sun, 6=Sat)
+  , co.hour_icu_intime -- hour of ICU admission (24 hour clock)
+  , co.hosp_exp_flg
+  , co.icu_exp_flg
+  , co.mort_day -- days from ICU admission to mortality, if they died
+  , co.day_28_flg -- 1/0 whether the patient died 28 days after *ICU* admission
+  , co.mort_day_censored -- for patients who survived, has imputed censored days
+  , co.censor_flg
+
+  , co.vent_flg
+  , co.vent_1st_12hr
+  , co.vent_1st_24hr
+  , co.vent_b4_aline
+  , co.vent_day
+  , co.vent_free_day
+
   , s2.sapsii -- NOTE: wasn't used in original mimic-ii study
 
   , case when vaso.icustay_id is not null then 1 else 0 end as vaso_flg
