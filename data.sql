@@ -6,6 +6,7 @@ select
   , s1.saps
   , s2.sapsii -- NOTE: wasn't used in original mimic-ii study
 
+  , case when vaso.icustay_id is not null then 1 else 0 end as vaso_flg
   , vaso.vaso_start_day
   , vaso.vaso_free_day
   , vaso.vaso_duration
@@ -127,3 +128,10 @@ left join aline_labs labs
   on co.hadm_id = labs.hadm_id
 left join aline_codestatus cs
   on co.icustay_id = cs.icustay_id
+where angus.angus = 0 -- no septic patients
+and vaso.icustay_id is null -- never given vasopressors in the ICU
+order by co.icustay_id;
+
+-- The remaining exclusion criteria are applied in cohort.sql
+--  **Angus sepsis
+--  **On vasopressors (?is this different than on dobutamine)
