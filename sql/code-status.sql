@@ -2,7 +2,7 @@
 --    i) a patient's first code status
 --    ii) whether the patient ever had another code status
 
-DROP MATERIALIZED VIEW ALINE_CODESTATUS;
+DROP MATERIALIZED VIEW IF EXISTS ALINE_CODESTATUS;
 CREATE MATERIALIZED VIEW ALINE_CODESTATUS AS
 with t1 as
 (
