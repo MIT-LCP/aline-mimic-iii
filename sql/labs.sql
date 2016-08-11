@@ -150,7 +150,7 @@ with bg as
     , max(case when label = 'SODIUM' and flag = 'abnormal' then 1 else 0 end) as SODIUM_abnormal_flg
     , max(case when label = 'TROPT' and flag = 'abnormal' then 1 else 0 end) as TROPT_abnormal_flg
     , max(case when label = 'WBC' and flag = 'abnormal' then 1 else 0 end) as WBC_abnormal_flg
-    abnormal
+
   from labs_rn
   where rn = 1
   group by subject_id, hadm_id
@@ -162,11 +162,11 @@ with bg as
   , percentile_cont(0.5) WITHIN GROUP (ORDER BY valuenum) as hct_med
   , min(valuenum) as HCT_lowest
   , max(valuenum) as HCT_highest
-  , case when percentile_disc(0.5) WITHIN GROUP (ORDER BY valuenum) = 'abnormal' then 1 else 0 end as hct_abnormal_flg
   from labs_rn
   where label = 'HEMATOCRIT'
   group by subject_id, hadm_id
 )
+
 -- TODO: last arterial blood gas preceeding
 -- ,50820 -- pH
 -- ,50821 -- po2
@@ -175,25 +175,27 @@ with bg as
 -- when itemid = 50821 then 'PO2' -- po2
 -- when itemid = 50818 then 'PCO2' -- pco2
 
--- labs from charts
-, labs_from_chart as
-(
-  select co.subject_id, co.hadm_id
-  , valuenum
-  , ROW_NUMBER() over (partition by co.hadm_id order by charttime DESC) as rn
-  from chartevents ce
-  inner join ALINE_COHORT co
-    on ce.subject_id = co.subject_id
-    and ce.charttime <= co.vent_starttime
-    and ce.charttime >= co.vent_starttime - interval '7' day
-  where itemid in
-  (
-    664,--	Swan SVO2
-    838,--	SvO2
-    223772 --	SvO2
-  )
-  and valuenum is not null
-)
+-- Get SVO2 from Swan Ganz using chartevents
+-- ... ended up not being needed in the final dataset, so commented out here
+
+-- , labs_from_chart as
+-- (
+--   select co.subject_id, co.hadm_id
+--   , valuenum
+--   , ROW_NUMBER() over (partition by co.hadm_id order by charttime DESC) as rn
+--   from chartevents ce
+--   inner join ALINE_COHORT co
+--     on ce.subject_id = co.subject_id
+--     and ce.charttime <= co.vent_starttime
+--     and ce.charttime >= co.vent_starttime - interval '7' day
+--   where itemid in
+--   (
+--     664,--	Swan SVO2
+--     838,--	SvO2
+--     223772 --	SvO2
+--   )
+--   and valuenum is not null
+-- )
 -- combine labs
 select co.subject_id, co.hadm_id
   -- labs
@@ -203,8 +205,9 @@ select co.subject_id, co.hadm_id
   , hct.hct_med
   , hct.hct_lowest
   , hct.hct_highest
-  , hct.hct_abnormal_flg
-
+  , case when co.gender_num = 1 and hct.hct_med between 44.7 and 50.3 then 0  -- male normal range
+        when co.gender_num = 0 and hct.hct_med between 36.1 and 44.3 then 0 -- female normal range
+      else 1 end as hct_abnormal_flg
   , lg.HEMATOCRIT as HEMATOCRIT_first
   , lg.wbc as wbc_first
   , lg.HEMOGLOBIN as hgb_first
@@ -229,7 +232,7 @@ select co.subject_id, co.hadm_id
   , lg.CK as CK_first
   , lg.NTBNP as NTBNP_first
   , lg.lactate as lactate_first
-  , lc.valuenum as svo2_first
+  -- , lc.valuenum as svo2_first
 
   -- , ph.ph
   -- , po2.po2
@@ -245,7 +248,7 @@ select co.subject_id, co.hadm_id
   , lg.TOTALCO2_abnormal_flg AS tco2_abnormal_flg
   , lg.bun_abnormal_flg
   , lg.creatinine_abnormal_flg
-  , lg.chloride as chloride_abnormal_flg
+  , lg.chloride_abnormal_flg
   , lg.glucose_abnormal_flg
   , lg.calcium_abnormal_flg
   , lg.magnesium_abnormal_flg
@@ -266,6 +269,6 @@ left join labs_grp lg
   on co.hadm_id = lg.hadm_id
 left join hct
   on co.hadm_id = hct.hadm_id
-left join labs_from_chart lc
-  on co.hadm_id = lc.hadm_id
-  and lc.rn = 1
+-- left join labs_from_chart lc
+--   on co.hadm_id = lc.hadm_id
+-- and lc.rn = 1
