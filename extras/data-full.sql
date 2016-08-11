@@ -2,7 +2,7 @@
 --FINAL QUERY (ish)
 select
   co.subject_id, co.hadm_id, co.icustay_id
-  , co.icustay_intime
+  , co.intime as icustay_intime
   , co.initial_aline_flg -- always 0, we remove patients admitted w/ aline
   , co.aline_flg
   , co.aline_time_day
@@ -20,7 +20,7 @@ select
   , so.sofa as sofa_first
   , co.service_unit
   , co.service_num
-  , co.icustay_outtime
+  , co.outtime as icustay_outtime
 
   , co.day_icu_intime -- day of week, text
   , co.day_icu_intime_num -- day of week, numeric (0=Sun, 6=Sat)
