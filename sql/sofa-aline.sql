@@ -16,8 +16,6 @@
 
 DROP MATERIALIZED VIEW IF EXISTS ALINE_SOFA;
 CREATE MATERIALIZED VIEW ALINE_SOFA AS
-
-
 -- extract PaO2/FiO2
 -- do not need to worry about patient ventilation
 with stg_fio2 as
