@@ -320,7 +320,7 @@ ORDER BY s1.icustay_id, s1.starttime
 )
 select
   subject_id, hadm_id, icustay_id
-  , 1 as anes_flg
+  , case when v.drug_start_day is not null then 1 else 0 end as anes_flg
   , v.drug_start_day as anes_start_day
   , v.drug_free_day as anes_free_day -- days free of anaesthesia *after* the last dose is given
   , v.drug_duration as anes_day -- number of fractional days on anaesthesia

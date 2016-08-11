@@ -332,7 +332,7 @@ ORDER BY s1.icustay_id, s1.starttime
 )
 select
   subject_id, hadm_id, icustay_id
-  , 1 as vaso_flg
+  , case when v.vaso_start_day is not null then 1 else 0 end as vaso_flg
   , v.vaso_start_day
   , v.vaso_free_day -- days free of vaso *after* last dose was given
   , v.vaso_duration as vaso_day -- days on vasopressors
