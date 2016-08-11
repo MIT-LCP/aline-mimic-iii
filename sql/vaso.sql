@@ -321,14 +321,14 @@ ORDER BY s1.icustay_id, s1.starttime
     , extract(epoch from (max(ie.outtime - ie.intime)))/60.0/60.0/24.0 as icu_los
     , co.ALINE_FLG
     , co.INITIAL_ALINE_FLG
-    , co.starttime_aline
+    , co.aline_time_day
   from aline_cohort co
   inner join icustays ie
     on co.icustay_id = ie.icustay_id
   left join vd
     on co.icustay_id = vd.icustay_id
   group by co.subject_id, co.hadm_id, co.icustay_id
-    , co.ALINE_FLG, co.INITIAL_ALINE_FLG, co.starttime_aline
+    , co.ALINE_FLG, co.INITIAL_ALINE_FLG, co.aline_time_day
 )
 select
   subject_id, hadm_id, icustay_id
@@ -342,9 +342,9 @@ select
   , case when v.vaso_start_day<=0.5 then 1 else 0 end as vaso_1st_12hr_flg
   , case
         -- if vaso started before aline
-        when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and vaso_start_day<=starttime_aline then 1
+        when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and vaso_start_day<=aline_time_day then 1
         -- vaso started after aline
-        when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and vaso_start_day>starttime_aline then 0
+        when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and vaso_start_day>aline_time_day then 0
         -- no aline on admission, but vaso started on admission
         when ALINE_FLG = 0 and INITIAL_ALINE_FLG = 0 and v.vaso_start_day<=(2/24) then 1
         -- no aline on admission and no vaso on admission

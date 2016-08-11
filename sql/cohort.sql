@@ -83,7 +83,6 @@ with a as
     , to_char(ie.intime, 'day') as day_icu_intime
     , extract(dow from ie.intime) as day_icu_intime_num
     , extract(hour from ie.intime) as hour_icu_intime
-    ,
     , ie.outtime as icustay_outtime
 
     , ROW_NUMBER() over (partition by ie.subject_id order by adm.admittime, ie.intime) as stay_num
@@ -117,8 +116,8 @@ with a as
     , case
         when a.starttime_aline is not null and a.starttime_aline > ie.intime + interval '1' hour and ve.starttime_first<=a.starttime_aline then 1
         when a.starttime_aline is not null and a.starttime_aline > ie.intime + interval '1' hour and ve.starttime_first>a.starttime_aline then 0
-        when a.starttime_aline is null and v.vent_start_day<=(2/24) then 1
-        when a.starttime_aline is null and v.vent_start_day>(2/24) then 0
+        when a.starttime_aline is null and ( (ve.starttime_first-ie.intime) <= interval '2' hour) then 1
+        when a.starttime_aline is null then 0 -- otherwise, ventilated 2 hours after admission
         else NULL
       end as vent_b4_aline
 
@@ -170,8 +169,8 @@ with a as
     on ie.subject_id = pat.subject_id
   left join a
     on ie.icustay_id = a.icustay_id
-  left join ve_grp
-    on ie.icustay_id = ve_grp.icustay_id
+  left join ve
+    on ie.icustay_id = ve.icustay_id
   left join serv s
     on ie.icustay_id = s.icustay_id
     and s.rn = 1
@@ -184,7 +183,7 @@ where stay_num = 1 -- first ICU stay
 and icu_los_day > 1 -- one day in the ICU
 and initial_aline_flg = 0 -- aline placed later than admission
 and vent_starttime is not null -- were ventilated
-and vent_starttime < intime + interval '12' hour -- ventilated within first 12 hours
+and vent_starttime < icustay_intime + interval '12' hour -- ventilated within first 12 hours
 and service_unit not in
 (
   'CSURG','VSURG','TSURG' -- cardiac/vascular/thoracic surgery
