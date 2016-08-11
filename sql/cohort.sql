@@ -79,11 +79,11 @@ with a as
 (
   select
     ie.subject_id, ie.hadm_id, ie.icustay_id
-    , ie.intime as icustay_intime
+    , ie.intime
     , to_char(ie.intime, 'day') as day_icu_intime
     , extract(dow from ie.intime) as day_icu_intime_num
     , extract(hour from ie.intime) as hour_icu_intime
-    , ie.outtime as icustay_outtime
+    , ie.outtime
 
     , ROW_NUMBER() over (partition by ie.subject_id order by adm.admittime, ie.intime) as stay_num
     , extract(epoch from (ie.intime - pat.dob))/365.242/24.0/60.0/60.0 as age
@@ -98,6 +98,7 @@ with a as
     -- collapse ethnicity into fixed categories
 
     -- time of a-line
+    , a.starttime_aline
     , case when a.starttime_aline is not null then 1 else 0 end as aline_flg
     , extract(epoch from (a.starttime_aline - ie.intime))/24.0/60.0/60.0 as aline_time_day
     , case
