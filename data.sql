@@ -169,6 +169,8 @@ left join aline_echodata ed
   on co.icustay_id = ed.icustay_id
 left join aline_vaso vaso
   on co.icustay_id = vaso.icustay_id
+left join aline_vaso_flg vaso_flg
+  on co.icustay_id = vaso_flg.icustay_id
 left join aline_anaesthesia an
   on co.icustay_id = an.icustay_id
 left join aline_icd icd
@@ -180,7 +182,7 @@ left join aline_labs labs
 left join aline_codestatus cs
   on co.icustay_id = cs.icustay_id
 where coalesce(angus.angus,0) = 0 -- no septic patients
-and coalesce(vaso.vaso_flg,0) = 0 -- never given vasopressors in the ICU
-order by co.icustay_id;
+and coalesce(vaso_flg.vaso_flg,0) = 0 -- never given vasopressors in the ICU
+order by co.icustay_id
 
 -- The remaining exclusion criteria are applied in cohort.sql
