@@ -1,19 +1,12 @@
--- Create a table of durations for a subset of vasopressors, specifically:
+-- Create a table which indicates if a patient was ever on a vasopressor during their ICU stay
+
+-- List of vasopressors used:
 -- norepinephrine - 30047,30120,221906
 -- epinephrine - 30044,30119,30309,221289
 -- phenylephrine - 30127,30128,221749
 -- vasopressin - 30051,222315
 -- dopamine - 30043,30307,221662
 -- Isuprel - 30046,227692
-
--- outputs:
---  vaso_start_day - number of fractional days before start of vasopressors
---  vaso_free_day - number of fractional days after discontinuation of vasopressors
---  vaso_duration - total duration of vasopressor usage
-
--- Note also that "vaso_free_day" is the number of days in the ICU after
--- the last vasopressor is discontinued. It excludes periods between vasopressor
--- doses, and so (vaso_start_day + vaso_free_day + vaso_duration) != ICU_LOS.
 
 DROP MATERIALIZED VIEW IF EXISTS ALINE_VASO_FLG;
 CREATE MATERIALIZED VIEW ALINE_VASO_FLG as
