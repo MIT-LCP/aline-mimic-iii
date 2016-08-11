@@ -184,7 +184,7 @@ where stay_num = 1 -- first ICU stay
 and icu_los_day > 1 -- one day in the ICU
 and initial_aline_flg = 0 -- aline placed later than admission
 and vent_starttime is not null -- were ventilated
-and vent_starttime < icustay_intime + interval '12' hour -- ventilated within first 12 hours
+and vent_starttime < intime + interval '12' hour -- ventilated within first 12 hours
 and service_unit not in
 (
   'CSURG','VSURG','TSURG' -- cardiac/vascular/thoracic surgery
