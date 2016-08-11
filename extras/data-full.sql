@@ -177,7 +177,7 @@ left join aline_icd icd
   on co.hadm_id = icd.hadm_id
 left join aline_vitals vi
   on co.hadm_id = vi.hadm_id
-left join aline_labs labs
+left join aline_labs_all labs
   on co.hadm_id = labs.hadm_id
 left join aline_codestatus cs
   on co.icustay_id = cs.icustay_id
