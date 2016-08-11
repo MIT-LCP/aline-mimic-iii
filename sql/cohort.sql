@@ -122,12 +122,18 @@ with a as
         else NULL
       end as vent_b4_aline
 
+    -- number of days on a ventilator
+    , ve.vent_day
+
+    -- number of days free of ventilator after *last* extubation
+    , extract(epoch from (ie.outtime - ve.endtime_last))/24.0/60.0/60.0 as vent_free_day
+
     -- number of days *not* on a ventilator
-    , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 - vent_day as vent_free_day
+    , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 - vent_day as vent_off_day
+
 
     , ve.starttime_first as vent_starttime
     , ve.endtime_last as vent_endtime
-    , ve.vent_day
 
     -- cohort flags // demographics
     , extract(epoch from (ie.outtime - ie.intime))/24.0/60.0/60.0 as icu_los_day

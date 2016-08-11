@@ -36,7 +36,7 @@ with vitals_stg0 as
     , ROW_NUMBER() over (partition by hadm_id, label order by charttime DESC) as rn
   from vitals_stg0
 )
--- now aggregate where rn=1 to get the *first* vital sign
+-- now aggregate where rn=1 to give the vital sign just before the vent starttime
 , vitals as
 (
   select

@@ -320,10 +320,11 @@ ORDER BY s1.icustay_id, s1.starttime
 )
 select
   subject_id, hadm_id, icustay_id
-  , v.drug_start_day as anaesthesia_start_day
-  , v.drug_free_day as anaesthesia_free_day
-  , v.drug_duration as anaesthesia_duration
-  , v.icu_los
+  , 1 as anes_flg
+  , v.drug_start_day as anes_start_day
+  , v.drug_free_day as anes_free_day -- days free of anaesthesia *after* the last dose is given
+  , v.drug_duration as anes_day -- number of fractional days on anaesthesia
+  , v.icu_los - v.drug_duration as anes_off_day -- number of fractional days *not* on anaesthesia
   , case
         -- if drug started before aline
         when ALINE_FLG = 1 and INITIAL_ALINE_FLG = 0 and drug_start_day<=starttime_aline then 1
@@ -333,6 +334,6 @@ select
         when ALINE_FLG = 0 and INITIAL_ALINE_FLG = 0 and drug_start_day<=(2/24) then 1
         -- no aline on admission and no drug on admission
         when ALINE_FLG = 0 and INITIAL_ALINE_FLG = 0 and drug_start_day>(2/24) then 0
-    else NULL end as anaesthesia_b4_aline
+    else NULL end as anes_b4_aline
 from drug_flg v
 order by icustay_id;

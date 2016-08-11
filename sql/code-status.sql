@@ -42,12 +42,13 @@ select
   co.subject_id, co.hadm_id, co.icustay_id
   , FirstCodeStatus, LastCodeStatus
   , DNR, CMO, DNCPR, DNI, FullCode
-  , case when FirstCodeStatus != 'DNR' and DNR = 1 then 1 else 0 end as dnr_switch
-  , case when FirstCodeStatus != 'CMO' and CMO = 1 then 1 else 0 end as cmo_switch
+  , case when FirstCodeStatus = 'DNR' then 1 else 0 end as dnr_adm_flg
+  , case when FirstCodeStatus != 'DNR' and DNR = 1 then 1 else 0 end as dnr_switch_flg
+  , case when FirstCodeStatus != 'CMO' and CMO = 1 then 1 else 0 end as cmo_switch_flg
   , case
       when FirstCodeStatus != 'DNR' and DNR = 1 then 1
       when FirstCodeStatus != 'CMO' and CMO = 1 then 1
-    else 0 end as dnr_cmo_switch
+    else 0 end as dnr_cmo_switch_flg
 from aline_cohort co
 left join dnr_stg dnr
   on co.icustay_id = dnr.icustay_id

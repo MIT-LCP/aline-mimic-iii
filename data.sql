@@ -16,6 +16,7 @@ select
   --, bmi
   --(optional extra) height_first
 
+  -- , s2.sapsii as sapsii_first -- NOTE: wasn't used in original mimic-ii study
   , s1.saps as sapsi_first
   , so.sofa as sofa_first
   , co.service_unit
@@ -35,100 +36,92 @@ select
   , co.vent_flg
   , co.vent_1st_12hr
   , co.vent_1st_24hr
-  , co.vent_b4_aline
-  , co.vent_day
-  , co.vent_free_day
+  , co.vent_b4_aline -- yes/no ventilated before a-line insertion
+  , co.vent_day -- number of fractional days on a ventilator
+  , co.vent_free_day -- number of fractional days *not* on a ventilator
 
-  , s2.sapsii -- NOTE: wasn't used in original mimic-ii study
-
-  , case when vaso.icustay_id is not null then 1 else 0 end as vaso_flg
-  , vaso.vaso_start_day
-  , vaso.vaso_free_day
-  , vaso.vaso_duration
+  , vaso.vaso_flg
+  -- , vaso.vaso_start_day
+  -- , vaso.vaso_free_day
+  , vaso.vaso_day -- number of fractional days on vasopressors
+  , vaso.vaso_free_day -- number of fractional days *not* on vasopressors
   , vaso.vaso_1st_3hr_flg
   , vaso.vaso_1st_6hr_flg
   , vaso.vaso_1st_12hr_flg
   , vaso.vaso_b4_aline
 
-  , an.anaesthesia_start_day
-  , an.anaesthesia_free_day
-  , an.anaesthesia_duration
-  , an.anaesthesia_b4_aline
-
-  -- TODO: are individual flags for each anaesthetic necessary?
+  -- , an.anes_start_day
+  , an.anes_flg
+  , an.anes_day
+  , an.anes_free_day
+  , an.anes_b4_aline
 
   , angus.angus as sepsis_flg
 
-  , icd.endocarditis
-  , icd.chf
-  , icd.afib
-  , icd.renal
-  , icd.liver
-  , icd.copd
-  , icd.cad
-  , icd.stroke
-  , icd.malignancy
-  , icd.respfail
-  , icd.ards
-  , icd.pneumonia
+  , icd.chf as chf_flg
+  , icd.afib as afib_flg
+  , icd.renal as renal_flg
+  , icd.liver as liver_flg
+  , icd.copd as copd_flg
+  , icd.cad as cad_flg
+  , icd.stroke as stroke_flg
+  , icd.malignancy as mal_flg
+  , icd.respfail as resp_flg
 
-  -- vital sign just preceeding ventilation
-  , vi.map
-  , vi.temperature
-  , vi.heartrate
-  , vi.cvp
-  , vi.spo2
+  -- , icd.endocarditis
+  -- , icd.ards as ards_flg
+  -- , icd.pneumonia as pneumonia_flg
+
+  -- vital sign value just preceeding ventilation
+  , vi.map as map_1st
+  , vi.heartrate as hr_1st
+  , vi.temperature as temp_1st
+  , vi.spo2 as spo2_1st
+  -- , vi.cvp
 
   -- labs!
   , labs.hct_med
   , labs.hct_lowest
   , labs.hct_highest
-  , labs.hematocrit
-  , labs.wbc
-  , labs.hemoglobin
-  , labs.platelet
-  , labs.sodium
-  , labs.potassium
-  , labs.totalco2
-  , labs.bun
-  , labs.creatinine
-  , labs.glucose
-  , labs.calcium
-  , labs.magnesium
-  , labs.phosphate
-  , labs.ast
-  , labs.alt
-  , labs.ldh
-  , labs.bilirubin
-  , labs.alp
-  , labs.albumin
-  , labs.tropt
-  , labs.ck
-  , labs.ntbnp
-  , labs.lactate
-  , labs.svo2
+  , labs.hct_abnormal_flg
 
-  -- TODO:
-  -- , bg.ph_first
-  -- , bg.po2_first
-  -- , bg.pco2_first
---
--- , coalesce(abg.abg_count,0) as abg_count
--- , coalesce(vbg.vbg_count,0) as vbg_count
--- , coalesce(abg.abg_count,0)+coalesce(vbg.vbg_count,0) as bg_total
+  , labs.wbc_first, labs.wbc_abnormal_flg
+  , labs.hgb_first, labs.hgb_abnormal_flg
+  , labs.platelet_first, labs.platelet_abnormal_flg
+  , labs.sodium_first, labs.sodium_abnormal_flg
+  , labs.potassium_first, labs.potassium_abnormal_flg
+  , labs.tco2_first, labs.tco2_abnormal_flg
+  , labs.chloride_first, labs.chloride_abnormal_flg
+  , labs.bun_first, labs.bun_abnormal_flg
+  , labs.creatinine_first, labs.creatinine_abnormal_flg
+  -- , labs.glucose_first, labs.glucose_abnormal_flg
+  -- , labs.calcium_first, labs.calcium_abnormal_flg
+  -- , labs.magnesium_first, labs.magnesium_abnormal_flg
+  -- , labs.phosphate_first, labs.phosphate_abnormal_flg
+  -- , labs.ast_first, labs.AST_abnormal_flg
+  -- , labs.alt_first, labs.ALT_abnormal_flg
+  -- , labs.ldh_first, labs.LDH_abnormal_flg
+  -- , labs.bilirubin_first, labs.bilirubin_abnormal_flg
+  -- , labs.alp_first, labs.ALP_abnormal_flg
+  -- , labs.albumin_first, labs.albumin_abnormal_flg
+  -- , labs.tropt_first, labs.tropt_abnormal_flg
+  -- , labs.ck_first, labs.CK_abnormal_flg
+  -- , labs.ntbnp_first, labs.NTBNP_abnormal_flg
+  -- , labs.lactate_first, labs.lactate_abnormal_flg
+  -- , labs.svo2_first
 
-  -- code status flags
-  , cs.dnr
-  , cs.cmo
-  , cs.dncpr
-  , cs.dni
-  , cs.fullcode
-  -- switched from something else to DNR
-  , cs.dnr_switch
-  -- switched from something else to CMO
-  , cs.cmo_switch
-  -- switched from something else to either DNR or CMO
-  , cs.dnr_cmo_switch
+
+  -- TODO: blood gases
+  -- , po2_first
+  -- , po2_first_coded
+  -- , po2_abnormal_flg
+  -- , pco2_first
+  -- , pco2_first_coded
+  -- , pco2_abnormal_flg
+
+  -- , coalesce(abg.abg_count,0) as abg_count
+  -- , coalesce(vbg.vbg_count,0) as vbg_count
+  -- , coalesce(abg.abg_count,0)+coalesce(vbg.vbg_count,0) as bg_total
 
 
   -- TODO: total fluid balance at the end of day 1, etc
@@ -142,6 +135,26 @@ select
   --   , IV.IV_day_3
   --   , IV.IV_3days_raw
   --   , IV.IV_3days_clean
+  --   , rbc_day_1
+  --   , rbc_total
+
+  -- code status flags
+  -- , cs.dnr
+  -- , cs.cmo
+  -- , cs.dncpr
+  -- , cs.dni
+  -- , cs.fullcode
+
+  -- admitted to the ICU as DNR
+  , cs.dnr_adm_flg
+
+  -- switched from something else to DNR
+  , cs.dnr_switch_flg
+  -- switched from something else to CMO
+  , cs.cmo_switch_flg
+  -- switched from something else to either DNR or CMO
+  , cs.dnr_cmo_switch_flg
+
 from aline_cohort co
 -- The following tables are generated by code in the mimic-code repository
 left join saps s1

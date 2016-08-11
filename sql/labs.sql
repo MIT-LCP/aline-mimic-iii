@@ -16,7 +16,7 @@ with bg as
 , labs_preceeding as
 (
   select co.subject_id, co.hadm_id
-    , l.valuenum, l.charttime
+    , l.valuenum, l.charttime, l.flag
     , case
             when itemid = 50862 then 'ALBUMIN'
             when itemid = 50878 then 'AST'
@@ -91,7 +91,7 @@ with bg as
 , labs_rn as
 (
   select
-    subject_id, hadm_id, valuenum, label
+    subject_id, hadm_id, valuenum, label, flag
     , ROW_NUMBER() over (partition by hadm_id, label order by charttime DESC) as rn
   from labs_preceeding
 )
@@ -123,6 +123,34 @@ with bg as
     , max(case when label = 'SODIUM' then valuenum else null end) as SODIUM
     , max(case when label = 'TROPT' then valuenum else null end) as TROPT
     , max(case when label = 'WBC' then valuenum else null end) as WBC
+
+    -- yes/no whether the lab was abnormal
+    -- TODO: do delta labs also get flagged as abnormal? or just 'delta'?
+    , max(case when label = 'ALBUMIN' and flag = 'abnormal' then 1 else 0 end) as ALBUMIN_abnormal_flg
+    , max(case when label = 'AST' and flag = 'abnormal' then 1 else 0 end) as AST_abnormal_flg
+    , max(case when label = 'ALT' and flag = 'abnormal' then 1 else 0 end) as ALT_abnormal_flg
+    , max(case when label = 'ALP' and flag = 'abnormal' then 1 else 0 end) as ALP_abnormal_flg
+    , max(case when label = 'TOTALCO2' and flag = 'abnormal' then 1 else 0 end) as TOTALCO2_abnormal_flg
+    , max(case when label = 'BILIRUBIN' and flag = 'abnormal' then 1 else 0 end) as BILIRUBIN_abnormal_flg
+    , max(case when label = 'BUN' and flag = 'abnormal' then 1 else 0 end) as BUN_abnormal_flg
+    , max(case when label = 'CALCIUM' and flag = 'abnormal' then 1 else 0 end) as CALCIUM_abnormal_flg
+    , max(case when label = 'CREATININE' and flag = 'abnormal' then 1 else 0 end) as CREATININE_abnormal_flg
+    , max(case when label = 'CHLORIDE' and flag = 'abnormal' then 1 else 0 end) as CHLORIDE_abnormal_flg
+    , max(case when label = 'CK' and flag = 'abnormal' then 1 else 0 end) as CK_abnormal_flg
+    , max(case when label = 'GLUCOSE' and flag = 'abnormal' then 1 else 0 end) as GLUCOSE_abnormal_flg
+    , max(case when label = 'HEMATOCRIT' and flag = 'abnormal' then 1 else 0 end) as HEMATOCRIT_abnormal_flg
+    , max(case when label = 'HEMOGLOBIN' and flag = 'abnormal' then 1 else 0 end) as HEMOGLOBIN_abnormal_flg
+    , max(case when label = 'LACTATE' and flag = 'abnormal' then 1 else 0 end) as LACTATE_abnormal_flg
+    , max(case when label = 'LDH' and flag = 'abnormal' then 1 else 0 end) as LDH_abnormal_flg
+    , max(case when label = 'MAGNESIUM' and flag = 'abnormal' then 1 else 0 end) as MAGNESIUM_abnormal_flg
+    , max(case when label = 'NTBNP' and flag = 'abnormal' then 1 else 0 end) as NTBNP_abnormal_flg
+    , max(case when label = 'PHOSPHATE' and flag = 'abnormal' then 1 else 0 end) as PHOSPHATE_abnormal_flg
+    , max(case when label = 'PLATELET' and flag = 'abnormal' then 1 else 0 end) as PLATELET_abnormal_flg
+    , max(case when label = 'POTASSIUM' and flag = 'abnormal' then 1 else 0 end) as POTASSIUM_abnormal_flg
+    , max(case when label = 'SODIUM' and flag = 'abnormal' then 1 else 0 end) as SODIUM_abnormal_flg
+    , max(case when label = 'TROPT' and flag = 'abnormal' then 1 else 0 end) as TROPT_abnormal_flg
+    , max(case when label = 'WBC' and flag = 'abnormal' then 1 else 0 end) as WBC_abnormal_flg
+    abnormal
   from labs_rn
   where rn = 1
   group by subject_id, hadm_id
@@ -134,6 +162,7 @@ with bg as
   , percentile_cont(0.5) WITHIN GROUP (ORDER BY valuenum) as hct_med
   , min(valuenum) as HCT_lowest
   , max(valuenum) as HCT_highest
+  , case when percentile_disc(0.5) WITHIN GROUP (ORDER BY valuenum) = 'abnormal' then 1 else 0 end as hct_abnormal_flg
   from labs_rn
   where label = 'HEMATOCRIT'
   group by subject_id, hadm_id
@@ -174,35 +203,64 @@ select co.subject_id, co.hadm_id
   , hct.hct_med
   , hct.hct_lowest
   , hct.hct_highest
+  , hct.hct_abnormal_flg
 
-  , lg.HEMATOCRIT
-  , lg.wbc
-  , lg.HEMOGLOBIN
-  , lg.platelet
-  , lg.sodium
-  , lg.potassium
-  , lg.TOTALCO2
-  , lg.bun
-  , lg.creatinine
-  , lg.glucose
-  , lg.calcium
-  , lg.magnesium
-  , lg.phosphate
-  , lg.AST
-  , lg.ALT
-  , lg.LDH
-  , lg.bilirubin
-  , lg.ALP
-  , lg.albumin
-  , lg.tropt
-  , lg.CK
-  , lg.NTBNP
-  , lg.lactate
-  , lc.valuenum as svo2
+  , lg.HEMATOCRIT as HEMATOCRIT_first
+  , lg.wbc as wbc_first
+  , lg.HEMOGLOBIN as hgb_first
+  , lg.platelet as platelet_first
+  , lg.sodium as sodium_first
+  , lg.potassium as potassium_first
+  , lg.TOTALCO2 as tco2_first
+  , lg.bun as bun_first
+  , lg.creatinine as creatinine_first
+  , lg.chloride as chloride_first
+  , lg.glucose as glucose_first
+  , lg.calcium as calcium_first
+  , lg.magnesium as magnesium_first
+  , lg.phosphate as phosphate_first
+  , lg.AST as AST_first
+  , lg.ALT as ALT_first
+  , lg.LDH as LDH_first
+  , lg.bilirubin as bilirubin_first
+  , lg.ALP as ALP_first
+  , lg.albumin as albumin_first
+  , lg.tropt as tropt_first
+  , lg.CK as CK_first
+  , lg.NTBNP as NTBNP_first
+  , lg.lactate as lactate_first
+  , lc.valuenum as svo2_first
 
   -- , ph.ph
   -- , po2.po2
   -- , pco2.pco2
+
+  -- abnormal flags
+  , lg.HEMATOCRIT_abnormal_flg
+  , lg.wbc_abnormal_flg
+  , lg.HEMOGLOBIN_abnormal_flg AS hgb_abnormal_flg
+  , lg.platelet_abnormal_flg
+  , lg.sodium_abnormal_flg
+  , lg.potassium_abnormal_flg
+  , lg.TOTALCO2_abnormal_flg AS tco2_abnormal_flg
+  , lg.bun_abnormal_flg
+  , lg.creatinine_abnormal_flg
+  , lg.chloride as chloride_abnormal_flg
+  , lg.glucose_abnormal_flg
+  , lg.calcium_abnormal_flg
+  , lg.magnesium_abnormal_flg
+  , lg.phosphate_abnormal_flg
+  , lg.AST_abnormal_flg
+  , lg.ALT_abnormal_flg
+  , lg.LDH_abnormal_flg
+  , lg.bilirubin_abnormal_flg
+  , lg.ALP_abnormal_flg
+  , lg.albumin_abnormal_flg
+  , lg.tropt_abnormal_flg
+  , lg.CK_abnormal_flg
+  , lg.NTBNP_abnormal_flg
+  , lg.lactate_abnormal_flg
+
 from ALINE_COHORT co
 left join labs_grp lg
   on co.hadm_id = lg.hadm_id

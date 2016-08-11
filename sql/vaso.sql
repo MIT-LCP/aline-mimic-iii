@@ -332,10 +332,11 @@ ORDER BY s1.icustay_id, s1.starttime
 )
 select
   subject_id, hadm_id, icustay_id
+  , 1 as vaso_flg
   , v.vaso_start_day
-  , v.vaso_free_day
-  , v.vaso_duration
-  , v.icu_los
+  , v.vaso_free_day -- days free of vaso *after* last dose was given
+  , v.vaso_duration as vaso_day -- days on vasopressors
+  , v.icu_los - v.vaso_duration as vaso_off_day -- days *not* on vasopressors
   , case when v.vaso_start_day<=0.125 then 1 else 0 end as vaso_1st_3hr_flg
   , case when v.vaso_start_day<=0.25 then 1 else 0 end as vaso_1st_6hr_flg
   , case when v.vaso_start_day<=0.5 then 1 else 0 end as vaso_1st_12hr_flg
