@@ -31,6 +31,8 @@ with io_cv as
     ,30043,30307,30125 -- dopamine
     ,30046 -- isuprel
   )
+  and rate is not null
+  and rate > 0
 )
 -- select only the ITEMIDs from the inputevents_mv table related to vasopressors
 , io_mv as
@@ -48,6 +50,8 @@ with io_cv as
   ,221662 -- dopamine
   ,227692 -- isuprel
   )
+  and rate is not null
+  and rate > 0
   and statusdescription != 'Rewritten' -- only valid orders
 )
 select
