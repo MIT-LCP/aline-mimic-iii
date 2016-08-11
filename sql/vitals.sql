@@ -17,11 +17,19 @@ with vitals_stg0 as
       else null end as label
     -- convert F to C
     , case when itemid in (223761,678) then (valuenum-32)/1.8 else valuenum end as valuenum
-  from chartevents ce
-  inner join ALINE_COHORT co
+  from ALINE_COHORT co
+  inner join chartevents ce
     on ce.subject_id = co.subject_id
     and ce.charttime <= co.vent_starttime
     and ce.charttime >= co.vent_starttime - interval '1' day
+    and itemid in
+    (
+        456,52,6702,443,220052,220181,225312 -- map
+      , 223762,676,223761,678 -- temp
+      , 211,220045 -- hr
+      , 113,220074 -- cvp
+      , 646,220277 -- spo2
+    )
 )
 -- next, assign an integer where rn=1 is the vital sign just preceeding vent
 , vitals_stg1 as
