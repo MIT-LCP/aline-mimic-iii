@@ -21,7 +21,7 @@ with vitals_stg0 as
   inner join ALINE_COHORT co
     on ce.subject_id = co.subject_id
     and ce.charttime <= co.vent_starttime
-    and ce.charttime >= co.vent_starttime - interval '7' day
+    and ce.charttime >= co.vent_starttime - interval '1' day
 )
 -- next, assign an integer where rn=1 is the vital sign just preceeding vent
 , vitals_stg1 as
