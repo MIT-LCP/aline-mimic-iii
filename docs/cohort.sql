@@ -1,1 +1,1 @@
-sql/cohort.sql
+../sql/cohort.sql

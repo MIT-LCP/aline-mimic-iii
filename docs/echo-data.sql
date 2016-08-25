@@ -1,1 +1,1 @@
-sql/echo-data.sql
+../sql/echo-data.sql

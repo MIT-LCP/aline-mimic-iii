@@ -1,1 +1,1 @@
-sql/icd.sql
+../sql/icd.sql

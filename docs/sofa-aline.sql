@@ -1,1 +1,1 @@
-sql/sofa-aline.sql
+../sql/sofa-aline.sql

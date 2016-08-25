@@ -1,1 +1,1 @@
-sql/vitals.sql
+../sql/vitals.sql

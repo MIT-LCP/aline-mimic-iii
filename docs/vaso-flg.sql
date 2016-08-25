@@ -1,1 +1,1 @@
-sql/vaso-flg.sql
+../sql/vaso-flg.sql

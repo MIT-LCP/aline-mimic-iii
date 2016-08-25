@@ -1,1 +1,1 @@
-sql/labs.sql
+../sql/labs.sql

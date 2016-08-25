@@ -1,1 +1,1 @@
-sql/angus.sql
+../sql/angus.sql
