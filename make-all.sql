@@ -4,13 +4,13 @@
 
 BEGIN;
 -- Generate the views
-\i sql/cohort.sql
-\i sql/echo-data.sql
-\i sql/icd.sql
-\i sql/labs.sql
-\i sql/sofa-aline
-\i sql/vitals.sql
-\i sql/vaso-flg.sql
-\i sql/angus.sql
+\i docs/cohort.sql
+\i docs/echo-data.sql
+\i docs/icd.sql
+\i docs/labs.sql
+\i docs/sofa-aline
+\i docs/vitals.sql
+\i docs/vaso-flg.sql
+\i docs/angus.sql
 
 COMMIT;
