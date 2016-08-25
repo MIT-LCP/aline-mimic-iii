@@ -6,11 +6,11 @@ NB: Content in the docs folder is served publicly with GitHub pages. The SQL scr
 
 ## SQL scripts used in HST-953:
 
-https://mit-lcp.github.io/aline-mimic-iii/angus.sql
-https://mit-lcp.github.io/aline-mimic-iii/cohort.sql
-https://mit-lcp.github.io/aline-mimic-iii/echo-data.sql
-https://mit-lcp.github.io/aline-mimic-iii/icd.sql
-https://mit-lcp.github.io/aline-mimic-iii/labs.sql
-https://mit-lcp.github.io/aline-mimic-iii/sofa-aline.sql
-https://mit-lcp.github.io/aline-mimic-iii/vaso-flg.sql	
-https://mit-lcp.github.io/aline-mimic-iii/vitals.sql
+https://mit-lcp.github.io/aline-mimic-iii/angus.sql  
+https://mit-lcp.github.io/aline-mimic-iii/cohort.sql  
+https://mit-lcp.github.io/aline-mimic-iii/echo-data.sql  
+https://mit-lcp.github.io/aline-mimic-iii/icd.sql  
+https://mit-lcp.github.io/aline-mimic-iii/labs.sql  
+https://mit-lcp.github.io/aline-mimic-iii/sofa-aline.sql  
+https://mit-lcp.github.io/aline-mimic-iii/vaso-flg.sql	 
+https://mit-lcp.github.io/aline-mimic-iii/vitals.sql  
