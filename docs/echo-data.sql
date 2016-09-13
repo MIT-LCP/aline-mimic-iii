@@ -94,14 +94,16 @@ select
 , chartdate
 , charttime
 , indication
+-- height in inches
 , height as height_first
+-- weight in lbs
 , weight as weight_first
 , case
     when weight is not null and height is not null
-        then (weight / (height*height))
+        then 703.0 * (weight / (height*height))
     else null
   end as BMI
-, bsa  as bsa_first
+, bsa as bsa_first
 , bp
 , bpsys
 , bpdias
