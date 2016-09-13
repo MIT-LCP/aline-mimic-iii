@@ -1,5 +1,5 @@
 
-DROP MATERIALIZED VIEW IF EXISTS ALINE_BMI;
+DROP MATERIALIZED VIEW IF EXISTS ALINE_BMI CASCADE;
 CREATE MATERIALIZED VIEW ALINE_BMI as
 
 with ce_wt as
@@ -63,8 +63,8 @@ with ce_wt as
 , echo as
 (
     select icustay_id
-        , 2.54*height_first as height_first
-        , 0.453592*weight_first as weight_first
+        , 2.54*height_first as height_echo
+        , 0.453592*weight_first as weight_echo
     from aline_echodata ec
 )
 , bmi as
@@ -73,18 +73,19 @@ select
     co.icustay_id
     -- weight in kg
     , round(cast(
-          coalesce(ce_wt.Weight_Admit, dwt.Weight_Daily, ec.weight_first)
+          coalesce(ce_wt.Weight_Admit, dwt.Weight_Daily, ec.weight_echo)
         as numeric), 2)
     as Weight
 
     -- height in metres
-    , coalesce(ce_ht.Height_chart, ec.height_first)/100.0 as Height
+    , coalesce(ce_ht.Height_chart, ec.height_echo)/100.0 as Height
 
     -- components
+    , ce_ht.Height_chart
     , ce_wt.Weight_Admit
     , dwt.Weight_Daily
-    , ec.Weight_first
-    , ec.Height_first
+    , ec.Height_echo
+    , ec.Weight_echo
 
 from aline_cohort co
 
@@ -102,7 +103,7 @@ left join ce_ht
 
 -- echo data
 left join echo ec
-    on co.subject_id = ec.icustay_id
+    on co.icustay_id = ec.icustay_id
 )
 select
     icustay_id
@@ -113,5 +114,12 @@ select
     end as BMI
     , height
     , weight
+
+    -- components
+    , Height_chart
+    , Weight_Admit
+    , Weight_Daily
+    , Height_echo
+    , Weight_echo
 from bmi
 order by icustay_id;
