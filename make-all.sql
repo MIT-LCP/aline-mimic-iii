@@ -8,7 +8,7 @@ BEGIN;
 \i docs/echo-data.sql
 \i docs/icd.sql
 \i docs/labs.sql
-\i docs/sofa-aline
+\i docs/sofa-aline.sql
 \i docs/vitals.sql
 \i docs/vaso-flg.sql
 \i docs/angus.sql
