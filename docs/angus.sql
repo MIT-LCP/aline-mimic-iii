@@ -82,11 +82,14 @@ WITH infection_group AS (
 			ELSE 0 END AS mech_vent
 	FROM MIMICIII.ADMISSIONS)
 -- List angus score for each admission
-SELECT subject_id, hadm_id, infection,
-	   explicit_sepsis, organ_dysfunction, mech_vent,
-	CASE
-	WHEN explicit_sepsis = 1 THEN 1
-	WHEN infection = 1 AND organ_dysfunction = 1 THEN 1
-	WHEN infection = 1 AND mech_vent = 1 THEN 1
-	ELSE 0 END AS Angus
-FROM aggregate;
+SELECT co.subject_id, co.hadm_id, co.icustay_id
+		, infection, explicit_sepsis
+		, organ_dysfunction, mech_vent
+		, CASE
+				WHEN explicit_sepsis = 1 THEN 1
+				WHEN infection = 1 AND organ_dysfunction = 1 THEN 1
+				WHEN infection = 1 AND mech_vent = 1 THEN 1
+				ELSE 0 END AS Angus
+FROM aline_cohort co
+inner join aggregate agg
+	on co.hadm_id = agg.hadm_id;
