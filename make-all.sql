@@ -11,6 +11,7 @@ BEGIN;
 \i docs/sofa-aline.sql
 \i docs/vitals.sql
 \i docs/vaso-flg.sql
+\i docs/bmi.sql
 \i docs/angus.sql
 
 COMMIT;
